@@ -37,32 +37,45 @@ all_sections = []
 
 # Loop through each section found
 for section in sections:
+    section_texts = section.find_all(["h2", "h3", "h4", "h5", "p", "table"])
     current_section = ""
-    # If the section contains h2 headings, add their text to the current section
-    if section.find_all("h2") is not None:
-        for h2 in section.find_all("h2"):
-            current_section += h2.text + "\n"
-    # If the section contains h3 headings, add their text to the current section
-    if section.find_all("h3") is not None:
-        for h3 in section.find_all("h3"):
-            current_section += h3.text + "\n"
-    # If the section contains h4 headings, add their text to the current section
-    if section.find_all("h4") is not None:
-        for h4 in section.find_all("h4"):
-            current_section += h4.text + "\n"
-    # If the section contains paragraphs, add their text to the current section
-    if section.find_all("p") is not None:
-        for p in section.find_all("p"):
-            current_section += p.text + "\n"
-    # Append the current section text to the list of all sections
+    for section_text in section_texts:
+        prev = ""
+        if section_text.name == "h2":
+            prev = "## "
+        elif section_text.name == "h3":
+            prev = "### "
+        elif section_text.name == "h4":
+            prev = "#### "
+        elif section_text.name == "h5":
+            prev = "##### "
+        elif section_text.name == "table":
+            # Extract the table content and convert to Markdown format
+            table_content = ""
+            divider = ""
+            for row in section_text.find_all("tr"):
+                cells = row.find_all(["th"])
+                for cell in cells:
+                    table_content += "| **" + cell.text + "** "
+                    divider += "|:---:"
+                table_content += "|\n" if divider else "\n"
+                table_content += divider
+                divider = ""
+                cells = row.find_all(["td"])
+                for cell in cells:
+                    table_content += "| " + cell.text + " "
+                table_content += "|"
+            table_content += "\n\n"
+            current_section += table_content
+        current_section += prev + section_text.text + "\n"
     all_sections.append(current_section)
 
 # Write the extracted content to a text file
 with open("./data/paper.txt", "w") as file:
-    file.write(paper_title + "\n")
-    file.write(abstract_title + "\n")
+    file.write("# " + paper_title + "\n")
+    file.write("## " + abstract_title + "\n")
     file.write(abstract_content + "\n")
-    file.write(keywords_title + "\n")
+    file.write("\n" + "**" + keywords_title.strip() + "**" + "\n")
     file.write(keywords + "\n")
     for section in all_sections:
         file.write(section + "\n")
