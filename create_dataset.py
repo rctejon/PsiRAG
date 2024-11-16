@@ -16,21 +16,22 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.get("https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10853571/?report=classic")
 
 # Find the main document section using XPath and extract its HTML content
-document = driver.find_element("xpath", "//section[@role='document']")
+document = driver.find_element("xpath", "//article")
 document = BeautifulSoup(document.get_attribute("innerHTML"), "html.parser")
 
 # Extract the title of the paper
 paper_title = document.find("h1").text
 
 # Find the abstract section and extract its title, content, and keywords
-abstract = document.find("div", {"id": "Abs1"})
+abstract = document.find("section", {"id": "Abs1"})
 abstract_title = abstract.find("h2").text
 abstract_content = abstract.find("p").text
-keywords_title = abstract.find("strong", {"class": "kwd-title"}).text
-keywords = abstract.find("span", {"class": "kwd-text"}).text
+keywords = abstract.find("section", {"id": "kwd-group1"})
+keywords_title = keywords.find("strong").text
+keywords = keywords.find("p").text.replace(keywords_title, '')
 
 # Find all sections whose IDs start with "Sec" followed by numbers using regex
-sections = document.find_all('div', id=re.compile(r"^Sec\d+$"))
+sections = document.find_all('section', id=re.compile(r"^Sec\d+$"))
 
 # Initialize a list to hold the text of all sections
 all_sections = []
@@ -52,15 +53,15 @@ for section in sections:
         elif section_text.name == "table":
             # Extract the table content and convert to Markdown format
             table_content = ""
-            divider = ""
+            sectionider = ""
             for row in section_text.find_all("tr"):
                 cells = row.find_all(["th"])
                 for cell in cells:
                     table_content += "| **" + cell.text + "** "
-                    divider += "|:---:"
-                table_content += "|\n" if divider else "\n"
-                table_content += divider
-                divider = ""
+                    sectionider += "|:---:"
+                table_content += "|\n" if sectionider else "\n"
+                table_content += sectionider
+                sectionider = ""
                 cells = row.find_all(["td"])
                 for cell in cells:
                     table_content += "| " + cell.text + " "
