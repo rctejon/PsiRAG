@@ -18,7 +18,7 @@ def extrct():
 
 @app.route('/scrapper', methods=['POST'])
 def scrapper():
-    print(request.form)
+    # Request data
     paper_url = request.form['url']
 
     # Set up Chrome browser options
@@ -69,15 +69,15 @@ def scrapper():
             elif section_text.name == "table":
                 # Extract the table content and convert to Markdown format
                 table_content = ""
-                sectionider = ""
+                divider = ""
                 for row in section_text.find_all("tr"):
                     cells = row.find_all(["th"])
                     for cell in cells:
                         table_content += "| **" + cell.text + "** "
-                        sectionider += "|:---:"
-                    table_content += "|\n" if sectionider else "\n"
-                    table_content += sectionider
-                    sectionider = ""
+                        divider += "|:---:"
+                    table_content += "|\n" if divider else "\n"
+                    table_content += divider
+                    divider = ""
                     cells = row.find_all(["td"])
                     for cell in cells:
                         table_content += "| " + cell.text + " "
@@ -88,6 +88,7 @@ def scrapper():
         all_sections.append(current_section)
 
     # Write the extracted content to a text file
+    # TODO - Save file in S3
     with open("./data/paper.txt", "w") as file:
         file.write("# " + paper_title + "\n")
         file.write("## " + abstract_title + "\n")
@@ -97,9 +98,7 @@ def scrapper():
         for section in all_sections:
             file.write(section + "\n")
 
-    # Close the WebDriver
-    driver.close()
-
+    # TODO - Redirect to correct page
     return "ok"
 
 if __name__ == '__main__':
