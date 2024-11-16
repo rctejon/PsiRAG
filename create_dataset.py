@@ -53,15 +53,15 @@ for section in sections:
         elif section_text.name == "table":
             # Extract the table content and convert to Markdown format
             table_content = ""
-            sectionider = ""
+            divider = ""
             for row in section_text.find_all("tr"):
                 cells = row.find_all(["th"])
                 for cell in cells:
                     table_content += "| **" + cell.text + "** "
-                    sectionider += "|:---:"
-                table_content += "|\n" if sectionider else "\n"
-                table_content += sectionider
-                sectionider = ""
+                    divider += "|:---:"
+                table_content += "|\n" if divider else "\n"
+                table_content += divider
+                divider = ""
                 cells = row.find_all(["td"])
                 for cell in cells:
                     table_content += "| " + cell.text + " "
