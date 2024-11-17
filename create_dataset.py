@@ -23,7 +23,7 @@ document = BeautifulSoup(document.get_attribute("innerHTML"), "html.parser")
 paper_title = document.find("h1").text
 
 # Find the abstract section and extract its title, content, and keywords
-abstract = document.find("section", {"id": "Abs1"})
+abstract = document.find("section", {"class": "abstract"})
 abstract_title = abstract.find("h2").text
 abstract_content = abstract.find("p").text
 keywords = abstract.find("section", {"id": "kwd-group1"})

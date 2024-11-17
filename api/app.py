@@ -25,6 +25,8 @@ def scrapper():
     chrome_options = Options()
     # Run Chrome in headless mode (without a GUI)
     chrome_options.add_argument("--headless")
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
 
     # Initialize the WebDriver with the specified options
     driver = webdriver.Chrome(options=chrome_options)
@@ -39,7 +41,7 @@ def scrapper():
     paper_title = document.find("h1").text
 
     # Find the abstract section and extract its title, content, and keywords
-    abstract = document.find("section", {"id": "Abs1"})
+    abstract = document.find("section", {"class": "abstract"})
     abstract_title = abstract.find("h2").text
     abstract_content = abstract.find("p").text
     keywords = abstract.find("section", {"id": "kwd-group1"})
@@ -89,7 +91,7 @@ def scrapper():
 
     # Write the extracted content to a text file
     # TODO - Save file in S3
-    with open("./data/paper.txt", "w") as file:
+    with open(f"../data/paper_{paper_title}.txt", "w") as file:
         file.write("# " + paper_title + "\n")
         file.write("## " + abstract_title + "\n")
         file.write(abstract_content + "\n")
