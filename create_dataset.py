@@ -13,7 +13,7 @@ chrome_options.add_argument("--headless")
 # Initialize the WebDriver with the specified options
 driver = webdriver.Chrome(options=chrome_options)
 # Open the webpage containing the article
-driver.get("https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10853571/?report=classic")
+driver.get("https://pmc.ncbi.nlm.nih.gov/articles/PMC4718671/")
 
 # Find the main document section using XPath and extract its HTML content
 document = driver.find_element("xpath", "//article")
@@ -22,16 +22,21 @@ document = BeautifulSoup(document.get_attribute("innerHTML"), "html.parser")
 # Extract the title of the paper
 paper_title = document.find("h1").text
 
+print(paper_title)
+
 # Find the abstract section and extract its title, content, and keywords
 abstract = document.find("section", {"class": "abstract"})
 abstract_title = abstract.find("h2").text
 abstract_content = abstract.find("p").text
 keywords = abstract.find("section", {"id": "kwd-group1"})
-keywords_title = keywords.find("strong").text
-keywords = keywords.find("p").text.replace(keywords_title, '')
+keywords_title = keywords.find("strong").text if keywords else ""
+keywords = keywords.find("p").text.replace(keywords_title, '') if keywords else ""
 
 # Find all sections whose IDs start with "Sec" followed by numbers using regex
 sections = document.find_all('section', id=re.compile(r"^Sec\d+$"))
+
+if not sections:
+    sections = document.find_all('section', id=re.compile(r"^sec\d+$"))
 
 # Initialize a list to hold the text of all sections
 all_sections = []
@@ -72,7 +77,7 @@ for section in sections:
     all_sections.append(current_section)
 
 # Write the extracted content to a text file
-with open("./data/paper.txt", "w") as file:
+with open(f"./data/paper_{paper_title}.txt", "w") as file:
     file.write("# " + paper_title + "\n")
     file.write("## " + abstract_title + "\n")
     file.write(abstract_content + "\n")

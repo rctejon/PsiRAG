@@ -57,11 +57,14 @@ def scrapper():
     abstract_title = abstract.find("h2").text
     abstract_content = abstract.find("p").text
     keywords = abstract.find("section", {"id": "kwd-group1"})
-    keywords_title = keywords.find("strong").text
-    keywords = keywords.find("p").text.replace(keywords_title, '')
+    keywords_title = keywords.find("strong").text if keywords else ""
+    keywords = keywords.find("p").text.replace(keywords_title, '') if keywords else ""
 
     # Find all sections whose IDs start with "Sec" followed by numbers using regex
     sections = document.find_all('section', id=re.compile(r"^Sec\d+$"))
+
+    if not sections:
+        sections = document.find_all('section', id=re.compile(r"^sec\d+$"))
 
     # Initialize a list to hold the text of all sections
     all_sections = []
