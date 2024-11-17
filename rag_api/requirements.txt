@@ -1,3 +1,8 @@
 Flask
 selenium
 beautifulsoup4
+groq
+langchain
+python-dotenv
+langchain-groq
+gunicorn
