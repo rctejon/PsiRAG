@@ -14,7 +14,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: 'Create env file'
+      working-directory: ./rag_api
+      run: |
+        touch .env
+        echo "${{ secrets.ENV }}" > .env
+        cat .env
     - name: Build and Push the Docker image
+      working-directory: ./rag_api
       run: |
         echo "${{ secrets.DOCKERPW }}" | docker login -u "rctejon" --password-stdin
         docker image build -t rctejon/psirag:latest .
