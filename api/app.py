@@ -5,6 +5,18 @@ from bs4 import BeautifulSoup
 import re
 from selenium.webdriver.common.by import By
 from flask import Flask,request
+import boto3
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access AWS credentials
+S3_BUCKET = os.getenv('AWS_BUCKET_NAME')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.getenv('AWS_DEFAULT_REGION')
 
 app = Flask(__name__)
 
@@ -13,7 +25,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/extract')
-def extrct():
+def extract():
     return render_template('extract.html')
 
 @app.route('/scrapper', methods=['POST'])
@@ -90,18 +102,25 @@ def scrapper():
         all_sections.append(current_section)
 
     # Write the extracted content to a text file
-    # TODO - Save file in S3
-    with open(f"../data/paper_{paper_title}.txt", "w") as file:
-        file.write("# " + paper_title + "\n")
-        file.write("## " + abstract_title + "\n")
-        file.write(abstract_content + "\n")
-        file.write("\n" + "**" + keywords_title.strip() + "**" + "\n")
-        file.write(keywords + "\n")
-        for section in all_sections:
-            file.write(section + "\n")
+    file_content = f"# {paper_title}\n\n## {abstract_title}\n{abstract_content}\n\n"
+    file_content += f"**{keywords_title.strip()}**\n{keywords}\n"
+    for section in all_sections:
+        file_content += section + "\n"
+
+    # Save to S3
+    s3 = boto3.client('s3', region_name=AWS_REGION)
+    s3_file_key = f"papers/{paper_title}.txt"
+
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=s3_file_key,
+        Body=file_content,
+        ContentType='text/plain'
+    )
 
     # TODO - Redirect to correct page
-    return "ok"
+    return render_template('thanks.html', paper_title=paper_title)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
