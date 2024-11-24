@@ -2,6 +2,7 @@ import os
 import dotenv
 
 from langchain_groq import ChatGroq
+from chunking import query_embeddings
 
 def generate_chain():
     dotenv.load_dotenv()
@@ -25,7 +26,7 @@ def generate_chain():
     # System message sets the assistant's role and behavior
     system_message = SystemMessagePromptTemplate.from_template(
         "INSTRUCTIONS"
-        "Answer the users as detailed as possible QUESTION using the DOCUMENT text above. Keep your answer ground in the facts of the DOCUMENT. If the DOCUMENT doesn’t contain the facts to answer the QUESTION return NONE'"
+        "Answer the users as detailed as possible QUESTION using the DOCUMENT text above. Keep your answer ground in the facts of the DOCUMENT. If the DOCUMENT doesn’t contain the facts to answer the QUESTION return NONE, leave the references at the end'"
     )
 
     # Human message takes the user's query
@@ -40,11 +41,14 @@ def generate_chain():
 
 if __name__ == "__main__":
     # Example of input data
+    results = query_embeddings("What is the SCL-90-R?")
+    docs = list(map(lambda i: f"DOC{i[0]+1}: {i[1].page_content}", enumerate(results)))
+    print("\n".join(docs))
     inputs = {
         "query": "What is the SCL-90-R?",
-        "context": "The SCL-S-9 serves to assess a wide range of psychopathologic symptoms with each item belonging to one dimension of the original SCL-90-R (i.e., somatization, obsessive-compulsive, interpersonal sensitivity, depression, anxiety, hostility, phobic anxiety, paranoid ideation, and psychoticism). Each of the nine items of the measure are presented with a 5-point response scale (0 = “none at all” to 4 = “very severe”). Good internal consistency was found for the SCL-S-9 in the investigated sample (α was 0.81 at each measurement point)."
+        "context": "\n".join(docs)
     }
     chain = generate_chain()
     ai_msg = chain.invoke(inputs)
-    # print(ai_msg)
+    print('=======================================')
     print(ai_msg.content)

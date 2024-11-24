@@ -11,6 +11,7 @@ ADD templates templates
 
 COPY app.py app.py
 COPY llm.py llm.py
+COPY chunking.py chunking.py
 ADD .env .env
 
 EXPOSE 5000

@@ -6,3 +6,7 @@ langchain
 python-dotenv
 langchain-groq
 gunicorn
+langchain_openai
+langchain_postgres
+boto3
+psycopg2
