@@ -16,7 +16,7 @@ def ask_llm():
 def ask():
     question = request.form['question']
     results = query_embeddings(question)
-    docs = list(map(lambda i: f"{i[1].page_content}", enumerate(results)))
+    docs = list(map(lambda x: f"{x.page_content}", results))
     chain = generate_chain()
     inputs = {
         "query": question,
