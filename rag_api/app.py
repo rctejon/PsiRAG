@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template
 from llm import generate_chain
-from chunking import query_embeddings
+from chunking import query_embeddings, download_and_chunk_s3_individual_file, store_embeddings_in_pg
 
 app = Flask(__name__)
 
@@ -24,6 +24,14 @@ def ask():
     }
     ai_msg = chain.invoke(inputs)
     return {"answer": ai_msg.content}
+
+@app.route('/add-document', methods=['POST'])
+def ask():
+    file_key = request.form['file_key']
+    chunks = download_and_chunk_s3_individual_file(file_key)
+    store_embeddings_in_pg(chunks)
+
+    return {"answer": "Document added"}
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -53,12 +53,27 @@ EMBEDDING_NAME = "langchain_pg_embedding"
 
 print(PG_CONN_STRING)
 
+def chunk_s3_file(file_key, chunk_content, chunk_metadata, prefix="", bucket_name=S3_BUCKET_NAME):
+    if file_key.endswith(".txt"):
+        print(f"Downloading {file_key}...")
+        s3_object = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        content = s3_object["Body"].read().decode("utf-8")
+
+        # Chunk the file content
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=120)
+        chunks = text_splitter.split_text(content)
+
+        # Add chunks with metadata
+        for idx, chunk in enumerate(chunks):
+            chunk_content.append(chunk)
+            chunk_metadata.append({"source_file": file_key, "chunk_id": idx})
+
 # Step 1: Download files from S3 and Chunk Text
-def download_and_chunk_s3_files(bucket_name, prefix=""):
+def download_and_chunk_s3_files():
     """
     Download all .txt files from an S3 bucket and chunk their content.
     """
-    response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix="")
 
     if "Contents" not in response:
         print("No files found in the specified S3 bucket or prefix.")
@@ -76,33 +91,44 @@ def download_and_chunk_s3_files(bucket_name, prefix=""):
         last_modified_date = obj["LastModified"].date()
         in_time_range = last_modified_date >= now
 
-        if file_key.endswith(".txt") and in_time_range:
-            print(f"Downloading {file_key}...")
-            s3_object = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-            content = s3_object["Body"].read().decode("utf-8")
-
-            # Chunk the file content
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=120)
-            chunks = text_splitter.split_text(content)
-
-            # Add chunks with metadata
-            for idx, chunk in enumerate(chunks):
-                chunk_content.append(chunk)
-                chunk_metadata.append({"source_file": file_key, "chunk_id": idx})
+        if in_time_range:
+            chunk_s3_file(file_key, chunk_content, chunk_metadata)
  
     return {"texts": chunk_content, "metadatas": chunk_metadata}
 
 
-# For individual chunk
-# def load_and_chunk_file(file_path):
-#     with open(file_path, 'r') as file:
-#         content = file.read()
+def find_file_in_s3(file_name):
+    try:
+        response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
         
-#     # Chunk text into manageable pieces
-#     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-#     chunks = text_splitter.split_text(content)
-#     return chunks
+        # Check if the bucket has any objects
+        if "Contents" not in response:
+            print("No files found in the specified S3 bucket.")
+            return None
+        
+        # Search for the file by name
+        for obj in response["Contents"]:
+            if obj["Key"] == file_name:
+                print(f"File found: {file_name}")
+                return obj  # Return the file metadata
+        
+        print(f"File '{file_name}' not found in bucket '{S3_BUCKET_NAME}'.")
+        return None
+    except Exception as e:
+        print(f"Error searching for file: {e}")
+        return None    
 
+
+# For individual chunk
+def download_and_chunk_s3_individual_file(file_name):
+    file_obj = find_file_in_s3(file_name)
+    file_key = file_obj["Key"]
+    chunk_content = []
+    chunk_metadata = []
+    chunk_s3_file(file_key, chunk_content, chunk_metadata)
+
+    return {"texts": chunk_content, "metadatas": chunk_metadata}
+         
 
 # Step 2: Store Embeddings in PostgreSQL
 def store_embeddings_in_pg(chunks):
@@ -158,7 +184,7 @@ def remove_data():
 
 # Step 4: Main Function
 if __name__ == "__main__":
-    chunks = download_and_chunk_s3_files(S3_BUCKET_NAME)
+    chunks = download_and_chunk_s3_files()
     #chunks = load_and_chunk_file("./paper.txt")
 
     if chunks and chunks["texts"] and chunks["metadatas"]:
