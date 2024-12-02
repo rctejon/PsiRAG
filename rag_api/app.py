@@ -26,7 +26,7 @@ def ask():
     return {"answer": ai_msg.content}
 
 @app.route('/add-document', methods=['POST'])
-def ask():
+def add_document():
     file_key = request.form['file_key']
     chunks = download_and_chunk_s3_individual_file(file_key)
     store_embeddings_in_pg(chunks)
