@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import re
 from selenium.webdriver.common.by import By
 from flask import Flask,request
+import requests
 import boto3
 from dotenv import load_dotenv
 import os
@@ -121,9 +122,17 @@ def scrapper():
         ContentType='text/plain'
     )
 
+    # Upload document to DB using API
+    url = "https://psirag.livelydune-e2aafbd7.eastus.azurecontainerapps.io/add-document"
+    response = requests.post(
+        url,
+        data={
+            "file_key": s3_file_key,         
+        }
+    )
+
     # TODO - Redirect to correct page
     return render_template('thanks.html', paper_title=paper_title)
-
 
 if __name__ == '__main__':
     app.run(debug=True)

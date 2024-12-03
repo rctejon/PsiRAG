@@ -4,3 +4,4 @@ beautifulsoup4
 gunicorn
 boto3
 python-dotenv
+requests
