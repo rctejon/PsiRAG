@@ -2,19 +2,31 @@ import os
 import dotenv
 
 from langchain_groq import ChatGroq
+from langchain_openai import AzureChatOpenAI
 from chunking import query_embeddings
 
-def generate_chain():
+
+def generate_chain(open_ai=False):
     dotenv.load_dotenv()
 
     llm = ChatGroq(
         model="llama-3.1-70b-versatile",
-        temperature=1,
+        temperature=0,
         max_tokens=None,
         timeout=None,
         max_retries=2,
         # other params...
     )
+    if open_ai:
+        llm = AzureChatOpenAI(
+            azure_deployment="gpt-35-turbo",  # or your deployment
+            api_version="2024-08-01-preview",  # or your api version
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+            # other params...
+        )
 
     # Format the prompt with the retrieved context and user query
     # formatted_prompt = rag_prompt.format_prompt(**inputs).to_messages()
@@ -39,10 +51,11 @@ def generate_chain():
     chain = rag_prompt | llm
     return chain
 
+
 if __name__ == "__main__":
     # Example of input data
     results = query_embeddings("What is the SCL-90-R?")
-    docs = list(map(lambda i: f"DOC{i[0]+1}: {i[1].page_content}", enumerate(results)))
+    docs = list(map(lambda i: f"DOC{i[0] + 1}: {i[1].page_content}", enumerate(results)))
     print("\n".join(docs))
     inputs = {
         "query": "What is the SCL-90-R?",

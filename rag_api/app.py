@@ -15,9 +15,23 @@ def ask_llm():
 @app.route('/ask', methods=['POST'])
 def ask():
     question = request.form['question']
+    open_ai = request.form.get('open_ai') == 'true'
+    print(open_ai, type(open_ai))
     results = query_embeddings(question)
     docs = list(map(lambda x: f"{x.page_content}", results))
-    chain = generate_chain()
+    if open_ai:
+        try:
+            chain = generate_chain(open_ai=open_ai)
+            inputs = {
+                "query": question,
+                "context": "\n".join(docs)
+            }
+            ai_msg = chain.invoke(inputs)
+            return {"answer": ai_msg.content}
+        except Exception as e:
+            print(e)
+            pass
+    chain = generate_chain(open_ai=False)
     inputs = {
         "query": question,
         "context": "\n".join(docs)

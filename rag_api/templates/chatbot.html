@@ -5,7 +5,9 @@
     <h3>¿Do you have a question?</h3>
     <form id="askForm">
         <div class="mb-3">
-            <label for="question" class="form-label">Chatbot</label>
+            <!-- Checkbox to select if we use open_ai model -->
+            <input type="checkbox" id="openai" name="openai" value="openai">
+            <label for="openai">Use OpenAI model</label>
             <input type="text" class="form-control" id="question" name="question" required>
         </div>
         <button type="submit" class="btn btn-primary">Ask</button>
@@ -24,6 +26,8 @@ document.getElementById('askForm').addEventListener('submit', async function(eve
 
     // Get the question input value
     const question = document.getElementById('question').value;
+    // Get the checkbox value
+    const openai = document.getElementById('openai').checked;
 
     try {
         // Make a POST request to the /ask endpoint
@@ -32,7 +36,10 @@ document.getElementById('askForm').addEventListener('submit', async function(eve
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: new URLSearchParams({ question })
+            body: new URLSearchParams({
+                question: question,
+                open_ai: openai
+            })
         });
 
         // Get the response text
